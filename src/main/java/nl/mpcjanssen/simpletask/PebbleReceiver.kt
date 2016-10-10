@@ -7,6 +7,7 @@ import com.getpebble.android.kit.PebbleKit.PebbleDataReceiver
 import com.getpebble.android.kit.util.PebbleDictionary
 import nl.mpcjanssen.simpletask.task.TToken
 import nl.mpcjanssen.simpletask.task.TodoList
+import java.security.MessageDigest
 import java.util.*
 
 /**
@@ -63,8 +64,14 @@ class PebbleReceiver(subscribedUuid: UUID?) : PebbleDataReceiver(subscribedUuid)
             // TODO(bk) need to trim this to a maximum length
             val text = item.task.showParts(tokensToShow)
 
+            // generate hash
+            val md=MessageDigest.getInstance("MD5")
+            md.update(item.task.text.toByte())
+            val hash=String(md.digest()).substring(21,31)
+
             dict.addInt32(0, MessageTypeResponseTask);
-            dict.addInt32(MessageTypeResponseTaskLine, item.line.toInt());
+            dict.addInt32(MessageTypeResponseTaskId, item.line.toInt());
+            dict.addString(MessageTypeResponseTaskHash, hash)
             dict.addString(MessageTypeResponseTaskName, text)
 
             log.debug(TAG, "Sending task: " + item.line + "=" + text+" with UUID: "+ appUuid);
@@ -80,8 +87,9 @@ class PebbleReceiver(subscribedUuid: UUID?) : PebbleDataReceiver(subscribedUuid)
         val MessageTypeResponseTask=0;
 
         // Fields: MessageTypeResponseTask=0
-        val MessageTypeResponseTaskLine=1;
-        val MessageTypeResponseTaskName=2;
+        val MessageTypeResponseTaskId=1;
+        val MessageTypeResponseTaskHash=2;
+        val MessageTypeResponseTaskName=3;
 
         private val TAG = "PebbleReceiver"
     }
